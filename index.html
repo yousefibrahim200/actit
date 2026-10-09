@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07060f">
+  <title>ActIt 🎭</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <main class="app">
+    <!-- SETUP -->
+    <section id="setup" class="screen active">
+      <h1 class="logo">ActIt <span>🎭</span></h1>
+      <p class="tagline">مثّل الحركة، وفريقك يخمّن.</p>
+
+      <div class="glass panel">
+        <div id="team-fields" class="tf-wrap"></div>
+        <div class="field"><span>عدد الفرق</span><div class="chips" data-key="teams"><button class="chip" data-v="2">2</button><button class="chip" data-v="3">3</button><button class="chip" data-v="4">4</button></div></div>
+        <div class="field"><span>مدة الدور</span><div class="chips" data-key="duration"><button class="chip" data-v="30">30 ث</button><button class="chip" data-v="60">60 ث</button><button class="chip" data-v="90">90 ث</button></div></div>
+        <div class="field"><span>عدد الأدوار لكل فريق</span><div class="chips" data-key="rounds"><button class="chip" data-v="1">1</button><button class="chip" data-v="2">2</button><button class="chip" data-v="3">3</button><button class="chip" data-v="5">5</button></div></div>
+        <div class="field"><span>نوع الحركات</span><div class="chips" data-key="cat"><button class="chip" data-v="all">الكل</button><button class="chip" data-v="sport">رياضة وحركة</button><button class="chip" data-v="food">أكل وشرب</button><button class="chip" data-v="fun">تمثيل مضحك</button><button class="chip" data-v="daily">حياة يومية</button></div></div>
+        <div class="field"><span>الصعوبة (⭐ = نقطة)</span><div class="chips" data-key="diff"><button class="chip" data-v="all">مختلط</button><button class="chip" data-v="1">سهل ⭐</button><button class="chip" data-v="2">متوسط ⭐⭐</button><button class="chip" data-v="3">صعب ⭐⭐⭐</button></div></div>
+        <div class="field"><span>تحديات التمثيل (+1)</span><div class="chips" data-key="fun"><button class="chip" data-v="on">تشغيل</button><button class="chip" data-v="off">إيقاف</button></div></div>
+        <div class="field"><span>خصم نقطة بعد 3 تخطيات</span><div class="chips" data-key="penalty"><button class="chip" data-v="off">إيقاف</button><button class="chip" data-v="on">تشغيل</button></div></div>
+        <p id="load-error" class="error" hidden>تعذر تحميل words.json. شغّل المشروع عبر Live Server بدل فتح الملف مباشرة.</p>
+      </div>
+
+      <button id="start-btn" class="btn btn-main" disabled>ابدأ اللعب</button>
+    </section>
+
+    <!-- GAME -->
+    <section id="game" class="screen">
+      <div class="topbar">
+        <div id="team-turn" class="turn-pill">—</div>
+        <button id="sound-btn" class="icon-btn" aria-label="الصوت">🔊</button>
+        <button id="pause-btn" class="icon-btn" aria-label="إيقاف مؤقت">⏸</button>
+      </div>
+
+      <div class="timer-wrap">
+        <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
+          <circle cx="60" cy="60" r="52" class="ring-bg"/>
+          <circle id="ring-fg" cx="60" cy="60" r="52" class="ring-fg"/>
+        </svg>
+        <div id="timer">60</div>
+      </div>
+
+      <div id="pop" aria-hidden="true"></div>
+      <div class="card-scene" id="scene">
+        <div class="word-card" id="card">
+          <span id="stars"></span><span id="streak"></span>
+          <p id="word-display">…</p>
+          <div id="challenge"></div>
+          <small id="round-info"></small>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="skip-btn" class="btn btn-skip">تخطي</button>
+        <button id="correct-btn" class="btn btn-ok">صح ✓ (+1)</button>
+      </div>
+
+      <div class="scoreboard glass" id="scoreboard"></div>
+    </section>
+  </main>
+
+  <!-- OVERLAYS -->
+  <div id="turn-modal" class="overlay">
+    <div class="glass modal">
+      <div class="emoji" id="turn-emoji">🎬</div>
+      <p id="turn-summary" class="summary"></p>
+      <div id="turn-log" class="log"></div>
+      <h2 id="turn-title"></h2>
+      <p id="turn-sub"></p>
+      <button id="go-btn" class="btn btn-main">أنا جاهز</button>
+    </div>
+  </div>
+
+  <div id="cd" class="overlay"><span id="cd-num"></span></div>
+
+  <div id="pause-modal" class="overlay">
+    <div class="glass modal">
+      <div class="emoji">⏸</div>
+      <h2>اللعبة متوقفة</h2>
+      <p>الكلمة مخفية إلى أن تكمل.</p>
+      <button id="resume-btn" class="btn btn-main">كمّل</button>
+    </div>
+  </div>
+
+  <div id="result-modal" class="overlay">
+    <div class="glass modal">
+      <div class="emoji">🏆</div>
+      <h2 id="result-title"></h2>
+      <p id="result-sub"></p>
+      <p id="result-last" class="summary"></p>
+      <button id="again-btn" class="btn btn-main">لعبة جديدة</button>
+    </div>
+  </div>
+
+  <footer class="credit">Developed with ❤️ by <b>Yousef Ibrahim</b></footer>
+  <script src="app.js"></script>
+</body>
+</html>
